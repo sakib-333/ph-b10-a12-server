@@ -74,7 +74,7 @@ async function run() {
     });
 
     // Logout
-    app.get("/logout", (req, res) => {
+    app.post("/logout", (req, res) => {
       res.clearCookie("ph_b10_a12", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
