@@ -59,6 +59,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const usersCollection = client.db("ph_b10_a12").collection("users");
+    const biodatasCollection = client.db("ph_b10_a12").collection("biodatas");
     // Auth APIs
     app.post("/jwt", (req, res) => {
       const email = req.body;
@@ -99,6 +100,15 @@ async function run() {
       res.send({ acknowledged: false, status: "user already exist." });
     });
     //Store user info end
+
+    // Get users start
+    app.get("/getUsers", async (req, res) => {
+      const cursor = biodatasCollection.find(req.query).limit(6);
+      const result = await cursor.toArray();
+
+      res.send(result);
+    });
+    // Get users end
   } finally {
   }
 }
