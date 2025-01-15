@@ -132,15 +132,17 @@ async function run() {
 
     // Get all users start
     app.post("/allBiodatas", async (req, res) => {
+      const data = req?.body;
+      const query = {};
+
       try {
-        const ageRange = req?.body?.age.split("-");
-        const query = {
-          age: {
+        if (data?.age) {
+          const ageRange = data.age.split("-");
+          query.age = {
             $gte: Number(ageRange[0]),
             $lte: Number(ageRange[1]),
-          },
-        };
-
+          };
+        }
         if (req?.body?.bioType) {
           query.bioType = req.body.bioType;
         }
@@ -152,8 +154,8 @@ async function run() {
         const result = await cursor.toArray();
 
         res.send(result);
-      } catch {
-        res.send({ status: "Error" });
+      } catch (err) {
+        console.log(err);
       }
     });
     // Get all users end
