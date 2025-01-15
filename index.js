@@ -134,6 +134,7 @@ async function run() {
     app.post("/allBiodatas", async (req, res) => {
       const data = req?.body;
       const query = {};
+      const start = Number(data?.start) || 0;
 
       try {
         if (data?.age) {
@@ -150,7 +151,7 @@ async function run() {
           query.permanentDivision = req.body.permanentDivision;
         }
 
-        const cursor = biodatasCollection.find(query, {}).limit(20);
+        const cursor = biodatasCollection.find(query, {}).skip(start).limit(20);
         const result = await cursor.toArray();
 
         res.send(result);
