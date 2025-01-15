@@ -140,7 +140,7 @@ async function run() {
           const ageRange = data.age.split("-");
           query.age = {
             $gte: Number(ageRange[0]),
-            $lte: Number(ageRange[1]),
+            $lte: Number(ageRange[1]) || 100,
           };
         }
         if (req?.body?.bioType) {
