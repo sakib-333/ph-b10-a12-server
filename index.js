@@ -116,6 +116,19 @@ async function run() {
       res.send(result);
     });
     // Get users end
+
+    // Get total biodatas start
+    app.get("/totalBiodatas", async (req, res) => {
+      const girlsBiodata = await biodatasCollection.countDocuments({
+        bioType: "Female",
+      });
+      const boysBiodata = await biodatasCollection.countDocuments({
+        bioType: "Male",
+      });
+
+      res.send({ girlsBiodata, boysBiodata, completedMarriages: 0 });
+    });
+    // Get total biodatas end
   } finally {
   }
 }
