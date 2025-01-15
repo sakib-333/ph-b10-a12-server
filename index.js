@@ -102,8 +102,15 @@ async function run() {
     //Store user info end
 
     // Get users start
-    app.get("/getUsers", async (req, res) => {
-      const cursor = biodatasCollection.find(req.query).limit(6);
+    app.get("/getPremiumUsers", async (req, res) => {
+      const query = { userType: "premium" };
+      const options = {
+        sort: {
+          age: req?.query?.age === "ascending" ? 1 : -1,
+        },
+      };
+
+      const cursor = biodatasCollection.find(query, options).limit(6);
       const result = await cursor.toArray();
 
       res.send(result);
