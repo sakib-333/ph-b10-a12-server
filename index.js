@@ -101,7 +101,7 @@ async function run() {
     });
     //Store user info end
 
-    // Get users start
+    // Get primium users start
     app.get("/getPremiumUsers", async (req, res) => {
       const query = { userType: "premium" };
       const options = {
@@ -115,7 +115,7 @@ async function run() {
 
       res.send(result);
     });
-    // Get users end
+    // Get primium users end
 
     // Get total biodatas start
     app.get("/totalBiodatas", async (req, res) => {
@@ -129,6 +129,34 @@ async function run() {
       res.send({ girlsBiodata, boysBiodata, completedMarriages: 0 });
     });
     // Get total biodatas end
+
+    // Get all users start
+    app.post("/allBiodatas", async (req, res) => {
+      try {
+        const ageRange = req?.body?.age.split("-");
+        const query = {
+          age: {
+            $gte: Number(ageRange[0]),
+            $lte: Number(ageRange[1]),
+          },
+        };
+
+        if (req?.body?.bioType) {
+          query.bioType = req.body.bioType;
+        }
+        if (req?.body?.permanentDivision) {
+          query.permanentDivision = req.body.permanentDivision;
+        }
+
+        const cursor = biodatasCollection.find(query, {}).limit(20);
+        const result = await cursor.toArray();
+
+        res.send(result);
+      } catch {
+        res.send({ status: "Error" });
+      }
+    });
+    // Get all users end
   } finally {
   }
 }
