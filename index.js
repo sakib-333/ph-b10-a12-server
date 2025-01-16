@@ -10,7 +10,11 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://ph-b10-a12.web.app",
+      "https://ph-b10-a12.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
