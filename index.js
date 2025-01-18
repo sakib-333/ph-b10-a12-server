@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
@@ -164,6 +164,19 @@ async function run() {
       }
     });
     // Get all users end
+
+    // Get single biodata start
+    app.post("/biodata", verifyToken, checkVaildUser, async (req, res) => {
+      const query = { _id: new ObjectId(req?.query) };
+      try {
+        const biodata = await biodatasCollection.findOne(query, {});
+
+        res.send(biodata);
+      } catch {
+        res.send({ status: "error" });
+      }
+    });
+    // Get single biodata end
   } finally {
   }
 }
