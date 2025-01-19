@@ -64,6 +64,9 @@ async function run() {
   try {
     const usersCollection = client.db("ph_b10_a12").collection("users");
     const biodatasCollection = client.db("ph_b10_a12").collection("biodatas");
+    const favouritesCollection = client
+      .db("ph_b10_a12")
+      .collection("favouritesBiodata");
     // Auth APIs
     app.post("/jwt", (req, res) => {
       const email = req.body;
@@ -198,6 +201,36 @@ async function run() {
       }
     });
     // Get 3 suggested biodata end
+
+    // Add to favourites biodata start
+    app.post(
+      "/addToFavouritesBiodata",
+      verifyToken,
+      checkVaildUser,
+      async (req, res) => {
+        try {
+          const { email, id } = req.body;
+          const filter = { email };
+          const options = { upsert: true };
+          const updateDoc = {
+            $addToSet: {
+              favBios: id,
+            },
+          };
+
+          const result = await favouritesCollection.updateOne(
+            filter,
+            updateDoc,
+            options
+          );
+
+          res.send(result);
+        } catch {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Add to favourites biodata end
   } finally {
   }
 }
