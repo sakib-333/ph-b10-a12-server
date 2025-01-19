@@ -167,9 +167,18 @@ async function run() {
 
     // Get single biodata start
     app.post("/biodata", verifyToken, checkVaildUser, async (req, res) => {
-      const query = { _id: new ObjectId(req?.query) };
       try {
-        const biodata = await biodatasCollection.findOne(query, {});
+        const { email } = req?.body;
+        const { id } = req?.body;
+        const user = await usersCollection.findOne({ email });
+        const biodata = await biodatasCollection.findOne({
+          _id: new ObjectId(id),
+        });
+
+        if (user.userType !== "premium") {
+          biodata.contactEmail = null;
+          biodata.mobileNumber = null;
+        }
 
         res.send(biodata);
       } catch {
@@ -177,6 +186,18 @@ async function run() {
       }
     });
     // Get single biodata end
+
+    // Get 3 suggested biodata start
+    app.get("/suggestedBiodatas", async (req, res) => {
+      const query = req?.query;
+      try {
+        const result = await biodatasCollection.find(query).limit(3).toArray();
+        res.send(result);
+      } catch {
+        res.send({ status: "error" });
+      }
+    });
+    // Get 3 suggested biodata end
   } finally {
   }
 }
