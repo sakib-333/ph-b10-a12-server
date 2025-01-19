@@ -231,6 +231,16 @@ async function run() {
       }
     );
     // Add to favourites biodata end
+
+    // Get user type start
+    app.post("/getUserType", verifyToken, checkVaildUser, async (req, res) => {
+      const { email } = req?.body;
+
+      const result = await usersCollection.findOne({ email });
+
+      res.send(result);
+    });
+    // Get user type end
   } finally {
   }
 }
