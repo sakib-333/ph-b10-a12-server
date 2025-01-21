@@ -63,6 +63,9 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const usersCollection = client.db("ph_b10_a12").collection("users");
+    const notificationCollection = client
+      .db("ph_b10_a12")
+      .collection("notifications");
     const biodataCounter = client.db("ph_b10_a12").collection("biodataCounter");
     const biodatasCollection = client.db("ph_b10_a12").collection("biodatas");
     const favouritesCollection = client
@@ -308,6 +311,33 @@ async function run() {
       }
     });
     // Get my biodata end
+    // Request for premium start
+    app.post(
+      "/requestForPremium",
+      verifyToken,
+      checkVaildUser,
+      async (req, res) => {
+        try {
+          const { email } = req.body;
+          const filter = { _id: new ObjectId("678f6d2a768b15763583aea7") };
+          const options = { upsert: true };
+          const updateDoc = {
+            $push: {
+              premiumReq: email,
+            },
+          };
+          const result = await notificationCollection.updateOne(
+            filter,
+            updateDoc,
+            options
+          );
+          res.send(result)
+        } catch {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Request for premium end
   } finally {
   }
 }
