@@ -294,6 +294,20 @@ async function run() {
       }
     });
     // My biodata end
+
+    // Get my biodata start
+    app.post("/getMyBiodata", verifyToken, checkVaildUser, async (req, res) => {
+      try {
+        const { email } = req.body;
+        const myBiodata = await biodatasCollection.findOne({
+          contactEmail: email,
+        });
+        res.send(myBiodata);
+      } catch {
+        res.send({ status: "Error" });
+      }
+    });
+    // Get my biodata end
   } finally {
   }
 }
