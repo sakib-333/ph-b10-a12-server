@@ -331,13 +331,51 @@ async function run() {
             updateDoc,
             options
           );
-          res.send(result)
+          res.send(result);
         } catch {
           res.send({ status: "Error" });
         }
       }
     );
     // Request for premium end
+    // My favourite biodatas start
+    app.post(
+      "/getMyFavBiodatas",
+      verifyToken,
+      checkVaildUser,
+      async (req, res) => {
+        try {
+          const { email } = req.body;
+          const query = { email };
+          const options = {
+            projection: { _id: 0, favBios: 1 },
+          };
+          const result = await favouritesCollection.findOne(query, options);
+          const { favBios } = result;
+          const favBioId = favBios.map((id) => new ObjectId(id));
+
+          const documents = await biodatasCollection
+            .find(
+              { _id: { $in: favBioId } },
+              {
+                projection: {
+                  name: 1,
+                  BiodataId: 1,
+                  permanentDivision: 1,
+                  occupation: 1,
+                },
+              }
+            )
+            .toArray();
+
+          res.send(documents);
+        } catch (err) {
+          // res.send({ status: "Error" });
+          console.log(err);
+        }
+      }
+    );
+    // My favourite biodatas end
   } finally {
   }
 }
