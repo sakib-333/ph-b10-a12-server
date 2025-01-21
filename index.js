@@ -63,6 +63,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const usersCollection = client.db("ph_b10_a12").collection("users");
+    const biodataCounter = client.db("ph_b10_a12").collection("biodataCounter");
     const biodatasCollection = client.db("ph_b10_a12").collection("biodatas");
     const favouritesCollection = client
       .db("ph_b10_a12")
@@ -241,6 +242,58 @@ async function run() {
       res.send(result);
     });
     // Get user type end
+
+    // My biodata start
+    app.post("/myBiodata", verifyToken, checkVaildUser, async (req, res) => {
+      try {
+        const { email, action } = req?.body;
+        if (action === "get") {
+          const user = await biodatasCollection.findOne(
+            { contactEmail: email },
+            {}
+          );
+          res.send(user);
+        } else if (action === "update") {
+          const { data } = req?.body;
+
+          const filter = { contactEmail: email };
+          const options = { upsert: true };
+          const updateDoc = {
+            $set: data,
+          };
+          const result = await biodatasCollection.updateOne(
+            filter,
+            updateDoc,
+            options
+          );
+          res.send(result);
+        } else if (action === "add") {
+          const { data } = req?.body;
+          const query = { _id: new ObjectId("678f28da768b15763583aea4") };
+          const options = {
+            projection: { _id: 0, BiodataId: 1 },
+          };
+
+          const resCnt = await biodataCounter.findOne(query, options);
+          data.BiodataId = resCnt.BiodataId++;
+          const result = await biodatasCollection.insertOne(data);
+
+          const filter = { _id: new ObjectId("678f28da768b15763583aea4") };
+          const UpsertOpt = { upsert: true };
+          const updateDoc = {
+            $set: {
+              BiodataId: resCnt.BiodataId,
+            },
+          };
+          await biodataCounter.updateOne(filter, updateDoc, UpsertOpt);
+
+          res.send(result);
+        }
+      } catch {
+        res.send({ status: "Error" });
+      }
+    });
+    // My biodata end
   } finally {
   }
 }
