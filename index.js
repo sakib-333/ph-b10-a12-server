@@ -60,6 +60,23 @@ const client = new MongoClient(uri, {
   },
 });
 
+const verifyAdmin = async (req, res, next) => {
+  try {
+    const usersCollection = client.db("ph_b10_a12").collection("users");
+    const { email } = req.body;
+
+    const result = await usersCollection.findOne({ email }, {});
+
+    if (result.userType !== "admin") {
+      res.send({ status: "Error" });
+    }
+    next();
+  } catch (err) {
+    // res.send({ status: "Error" });
+    console.log(err);
+  }
+};
+
 async function run() {
   try {
     const usersCollection = client.db("ph_b10_a12").collection("users");
@@ -68,6 +85,7 @@ async function run() {
       .collection("notifications");
     const biodataCounter = client.db("ph_b10_a12").collection("biodataCounter");
     const biodatasCollection = client.db("ph_b10_a12").collection("biodatas");
+    const revenueCollection = client.db("ph_b10_a12").collection("revenue");
     const favouritesCollection = client
       .db("ph_b10_a12")
       .collection("favouritesBiodata");
@@ -376,6 +394,45 @@ async function run() {
       }
     );
     // My favourite biodatas end
+
+    // Count total, male, female and revenue start
+    app.post(
+      "/countBiodatas",
+      verifyToken,
+      checkVaildUser,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const totalBios = await biodatasCollection.estimatedDocumentCount();
+          const totalMaleBios = await biodatasCollection.countDocuments({
+            bioType: "Male",
+          });
+          const totalFemaleBios = await biodatasCollection.countDocuments({
+            bioType: "Female",
+          });
+          const totalPremiumBios = await biodatasCollection.countDocuments({
+            userType: "premium",
+          });
+          const result = await revenueCollection.findOne(
+            {
+              _id: new ObjectId("6790cabf6c4e32691d08342d"),
+            },
+            { projection: { _id: 0, totalRevenue: 1 } }
+          );
+
+          res.send({
+            totalBios,
+            totalMaleBios,
+            totalFemaleBios,
+            totalPremiumBios,
+            totalRevenue: result.totalRevenue,
+          });
+        } catch {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Count total, male, female and revenue end
   } finally {
   }
 }
