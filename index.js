@@ -121,6 +121,7 @@ async function run() {
       if (!user) {
         const doc = {
           email: req?.body?.email,
+          name: req.body.name,
           userType: req.body?.userType,
         };
         const result = await usersCollection.insertOne(doc);
@@ -433,6 +434,55 @@ async function run() {
       }
     );
     // Count total, male, female and revenue end
+
+    // Get all users start
+    app.post(
+      "/getAllUsers",
+      verifyToken,
+      checkVaildUser,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const { key } = req.body;
+          const query = { name: { $regex: key, $options: "i" } };
+          const cursor = usersCollection.find(query);
+          const result = await cursor.toArray();
+          res.send(result);
+        } catch {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Get all users end
+
+    // Make admin start
+    app.post(
+      "/makeAdmin",
+      verifyToken,
+      checkVaildUser,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const { email, adminEmail } = req?.body;
+          const filter = { email: adminEmail };
+          const options = { upsert: true };
+          const updateDoc = {
+            $set: {
+              userType: "admin",
+            },
+          };
+          const result = await usersCollection.updateOne(
+            filter,
+            updateDoc,
+            options
+          );
+          res.send(result);
+        } catch {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Make admin end
   } finally {
   }
 }
