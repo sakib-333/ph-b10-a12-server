@@ -369,8 +369,12 @@ async function run() {
           const options = {
             projection: { _id: 0, favBios: 1 },
           };
-          const result = await favouritesCollection.findOne(query, options);
+          const result = (await favouritesCollection.findOne(
+            query,
+            options
+          )) || { favBios: [] };
           const { favBios } = result;
+
           const favBioId = favBios.map((id) => new ObjectId(id));
 
           const documents = await biodatasCollection
@@ -389,8 +393,7 @@ async function run() {
 
           res.send(documents);
         } catch (err) {
-          // res.send({ status: "Error" });
-          console.log(err);
+          res.send({ status: "Error" });
         }
       }
     );
@@ -446,8 +449,14 @@ async function run() {
           const { key } = req.body;
           const query = { name: { $regex: key, $options: "i" } };
           const cursor = usersCollection.find(query);
+          const requestedUsers = await notificationCollection.findOne(
+            {
+              _id: new ObjectId("678f6d2a768b15763583aea7"),
+            },
+            { projection: { _id: 0, premiumReq: 1 } }
+          );
           const result = await cursor.toArray();
-          res.send(result);
+          res.send({ result, requestedUsers });
         } catch {
           res.send({ status: "Error" });
         }
