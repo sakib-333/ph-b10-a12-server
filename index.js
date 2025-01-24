@@ -492,6 +492,69 @@ async function run() {
       }
     );
     // Make admin end
+    // Get premium request users start
+    app.post(
+      "/getPremiumRequestUsers",
+      verifyToken,
+      checkVaildUser,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const res1 = await notificationCollection.findOne(
+            {
+              _id: new ObjectId("678f6d2a768b15763583aea7"),
+            },
+            { projection: { _id: 0, premiumReq: 1 } }
+          );
+          const reqUsersEmails = res1.premiumReq;
+          const res2 = await biodatasCollection
+            .find(
+              {
+                contactEmail: { $in: reqUsersEmails },
+              },
+              { projection: { name: 1, contactEmail: 1, BiodataId: 1 } }
+            )
+            .toArray();
+          res.send(res2);
+        } catch {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Get premium request users end
+
+    // Make user premium start
+    app.post(
+      "/makeUserPremium",
+      verifyToken,
+      checkVaildUser,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const { approvedEmail } = req.body;
+          const filter1 = { email: approvedEmail };
+          const filter2 = { contactEmail: approvedEmail };
+          const options = { upsert: true };
+          const updateDoc = {
+            $set: {
+              userType: "premium",
+            },
+          };
+          await usersCollection.updateOne(filter1, updateDoc, options);
+          await biodatasCollection.updateOne(filter2, updateDoc, options);
+          const res3 = await notificationCollection.updateOne(
+            {
+              _id: new ObjectId("678f6d2a768b15763583aea7"),
+            },
+            { $pull: { premiumReq: approvedEmail } }
+          );
+          res.send(res3);
+        } catch (err) {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Make user premium end
   } finally {
   }
 }
