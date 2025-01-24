@@ -85,6 +85,9 @@ async function run() {
       .collection("notifications");
     const biodataCounter = client.db("ph_b10_a12").collection("biodataCounter");
     const biodatasCollection = client.db("ph_b10_a12").collection("biodatas");
+    const successStoryCollection = client
+      .db("ph_b10_a12")
+      .collection("successStory");
     const revenueCollection = client.db("ph_b10_a12").collection("revenue");
     const favouritesCollection = client
       .db("ph_b10_a12")
@@ -555,6 +558,29 @@ async function run() {
       }
     );
     // Make user premium end
+
+    // Add success story start
+    app.post(
+      "/addSuccessStory",
+      verifyToken,
+      checkVaildUser,
+      async (req, res) => {
+        try {
+          const { email, successStory } = req.body;
+          const result = await successStoryCollection.insertOne({
+            selfBiodataID: successStory.selfBiodataID,
+            partnerBiodataID: successStory.partnerBiodataID,
+            coupleImageLink: successStory.coupleImageLink,
+            successStoryReview: successStory.successStoryReview,
+            author: email,
+          });
+          res.send(result);
+        } catch {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Add success story end
   } finally {
   }
 }
