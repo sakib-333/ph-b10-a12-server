@@ -568,9 +568,11 @@ async function run() {
         try {
           const { email, successStory } = req.body;
           const result = await successStoryCollection.insertOne({
-            selfBiodataID: successStory.selfBiodataID,
-            partnerBiodataID: successStory.partnerBiodataID,
+            maleBiodataID: successStory.maleBiodataID,
+            femaleBiodataID: successStory.femaleBiodataID,
             coupleImageLink: successStory.coupleImageLink,
+            marriageDate: new Date(successStory.marriageDate),
+            rating: successStory.rating,
             successStoryReview: successStory.successStoryReview,
             author: email,
           });
@@ -581,6 +583,35 @@ async function run() {
       }
     );
     // Add success story end
+
+    // Get success story start
+    app.get("/getSuccessStory", async (req, res) => {
+      try {
+        const options = {
+          sort: { marriageDate: -1 },
+        };
+        const cursor = successStoryCollection.find({}, options).limit(3);
+        const result = await cursor.toArray();
+        res.send(result);
+      } catch {
+        res.send({ status: "Error" });
+      }
+    });
+    // Get success story end
+    // Get success story for admin start
+    app.get("/getSuccessStoryAdmin", async (req, res) => {
+      try {
+        const options = {
+          sort: { marriageDate: -1 },
+        };
+        const cursor = successStoryCollection.find({}, options);
+        const result = await cursor.toArray();
+        res.send(result);
+      } catch {
+        res.send({ status: "Error" });
+      }
+    });
+    // Get success story for admin end
   } finally {
   }
 }
