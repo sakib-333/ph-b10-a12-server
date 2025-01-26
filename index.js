@@ -162,8 +162,9 @@ async function run() {
       const boysBiodata = await biodatasCollection.countDocuments({
         bioType: "Male",
       });
+      const completedMarriages = await successStoryCollection.countDocuments();
 
-      res.send({ girlsBiodata, boysBiodata, completedMarriages: 0 });
+      res.send({ girlsBiodata, boysBiodata, completedMarriages });
     });
     // Get total biodatas end
 
