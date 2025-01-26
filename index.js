@@ -737,20 +737,33 @@ async function run() {
           {
             _id: new ObjectId(id),
           },
-          { projection: { contactEmail: 1, mobileNumber: 1 } }
+          {
+            projection: {
+              name: 1,
+              BiodataId: 1,
+              contactEmail: 1,
+              mobileNumber: 1,
+            },
+          }
         );
 
-        const filter = { email: userEmail };
-        const options = { upsert: true };
-        const updateDoc = {
-          $push: {
-            requestedContacts: {
-              contactEmail: result2.contactEmail,
-              mobileNumber: result2.mobileNumber,
-            },
+        await myContactRequestCollection.updateOne(
+          {
+            email: userEmail,
+            "requestedContacts.requestedID": id,
           },
-        };
-        await myContactRequestCollection.updateOne(filter, updateDoc, options);
+          {
+            $set: {
+              "requestedContacts.$": {
+                name: result2?.name,
+                BiodataId: result2?.BiodataId,
+                contactEmail: result2?.contactEmail,
+                mobileNumber: result2?.mobileNumber,
+                approved: true,
+              },
+            },
+          }
+        );
 
         const result4 = await notificationCollection.updateOne(
           {
