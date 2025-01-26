@@ -85,6 +85,9 @@ async function run() {
       .db("ph_b10_a12")
       .collection("notifications");
     const biodataCounter = client.db("ph_b10_a12").collection("biodataCounter");
+    const myContactRequestCollection = client
+      .db("ph_b10_a12")
+      .collection("myContactRequest");
     const biodatasCollection = client.db("ph_b10_a12").collection("biodatas");
     const successStoryCollection = client
       .db("ph_b10_a12")
@@ -644,7 +647,7 @@ async function run() {
           const filter2 = { _id: new ObjectId("678f6d2a768b15763583aea7") };
           const updateDoc = {
             $push: {
-              contactReq: { userEmail, requestedID },
+              contactReq: { userEmail, requestedID, approved: false },
             },
           };
           const result2 = await notificationCollection.updateOne(
@@ -658,6 +661,98 @@ async function run() {
       }
     );
     // Add payment to database end
+    // Get contact request start
+    app.post(
+      "/getContactRequest",
+      verifyToken,
+      checkVaildUser,
+      verifyAdmin,
+      async (req, res) => {
+        try {
+          const query = { _id: new ObjectId("678f6d2a768b15763583aea7") };
+          const options = {};
+          const result1 = await notificationCollection.findOne(query, options);
+
+          const reqContact = result1?.contactReq.map((item) => item.userEmail);
+          const result2 = await biodatasCollection
+            .find(
+              {
+                contactEmail: { $in: reqContact },
+              },
+              { projection: { name: 1, contactEmail: 1, BiodataId: 1 } }
+            )
+            .toArray();
+
+          const result3 = result2.map((item, indx) => {
+            if (item.contactEmail === result1?.contactReq[indx].userEmail) {
+              return {
+                ...item,
+                requestedID: result1?.contactReq[indx].requestedID,
+                approved: result1?.contactReq[indx].approved,
+              };
+            } else {
+              return item;
+            }
+          });
+          res.send(result3);
+        } catch {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Get contact request end
+    // Approve contact request start
+    app.post(
+      "/approveContactRequest",
+      verifyToken,
+      checkVaildUser,
+      verifyAdmin,
+      async (req, res) => {
+        const { userEmail, id } = req.body;
+
+        const result1 = await myContactRequestCollection.findOne({
+          email: userEmail,
+        });
+        if (result1 === null) {
+          await myContactRequestCollection.insertOne({
+            email: userEmail,
+            requestedContacts: [],
+          });
+        }
+
+        const result2 = await biodatasCollection.findOne(
+          {
+            _id: new ObjectId(id),
+          },
+          { projection: { contactEmail: 1, mobileNumber: 1 } }
+        );
+
+        const filter = { email: userEmail };
+        const options = { upsert: true };
+        const updateDoc = {
+          $push: {
+            requestedContacts: {
+              contactEmail: result2.contactEmail,
+              mobileNumber: result2.mobileNumber,
+            },
+          },
+        };
+        await myContactRequestCollection.updateOne(filter, updateDoc, options);
+
+        const result4 = await notificationCollection.updateOne(
+          {
+            "contactReq.requestedID": id,
+          },
+          {
+            $set: {
+              "contactReq.$.approved": true,
+            },
+          }
+        );
+        res.send(result4);
+      }
+    );
+    // Approve contact request end
   } finally {
   }
 }
