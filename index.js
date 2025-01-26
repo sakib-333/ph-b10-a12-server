@@ -650,11 +650,34 @@ async function run() {
               contactReq: { userEmail, requestedID, approved: false },
             },
           };
+          //
           const result2 = await notificationCollection.updateOne(
             filter2,
             updateDoc
           );
-          res.send(result2);
+          const result3 = await myContactRequestCollection.findOne({
+            email: userEmail,
+          });
+          if (result3 === null) {
+            await myContactRequestCollection.insertOne({
+              email: userEmail,
+              requestedContacts: [],
+            });
+          }
+          const updateDoc4 = {
+            $push: {
+              requestedContacts: {
+                userEmail,
+                requestedID,
+                approved: false,
+              },
+            },
+          };
+          const result4 = await myContactRequestCollection.updateOne(
+            { email: userEmail },
+            updateDoc4
+          );
+          res.send(result4);
         } catch {
           res.send({ status: "Error" });
         }
@@ -710,16 +733,6 @@ async function run() {
       async (req, res) => {
         const { userEmail, id } = req.body;
 
-        const result1 = await myContactRequestCollection.findOne({
-          email: userEmail,
-        });
-        if (result1 === null) {
-          await myContactRequestCollection.insertOne({
-            email: userEmail,
-            requestedContacts: [],
-          });
-        }
-
         const result2 = await biodatasCollection.findOne(
           {
             _id: new ObjectId(id),
@@ -753,6 +766,57 @@ async function run() {
       }
     );
     // Approve contact request end
+
+    // Get my contact request start
+    app.post(
+      "/getMyContactRequest",
+      verifyToken,
+      checkVaildUser,
+      async (req, res) => {
+        try {
+          const { email } = req.body;
+          const result = await myContactRequestCollection.findOne(
+            { email },
+            { projection: { requestedContacts: 1 } }
+          );
+          res.send(result.requestedContacts);
+        } catch {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Get my contact request end
+    // Delete my contact request strat
+    app.post(
+      "/deleteMyContactRequest",
+      verifyToken,
+      checkVaildUser,
+      async (req, res) => {
+        const { email, id } = req.body;
+        const result = await myContactRequestCollection.updateOne(
+          {
+            email,
+          },
+          {
+            $pull: {
+              requestedContacts: { requestedID: id },
+            },
+          }
+        );
+        const result2 = await notificationCollection.updateOne(
+          {
+            _id: new ObjectId("678f6d2a768b15763583aea7"),
+          },
+          {
+            $pull: {
+              contactReq: { requestedID: id },
+            },
+          }
+        );
+        res.send(result2);
+      }
+    );
+    // Delete my contact request end
   } finally {
   }
 }
