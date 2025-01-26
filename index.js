@@ -1,9 +1,10 @@
+require("dotenv").config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 
 const app = express();
 // Middlewares
@@ -612,6 +613,51 @@ async function run() {
       }
     });
     // Get success story for admin end
+    // Payment start
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = Number(price) * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+    // Payment end
+    // Add payment to database start
+    app.post(
+      "/addPaymentToDatabase",
+      verifyToken,
+      checkVaildUser,
+      async (req, res) => {
+        try {
+          const { userEmail, requestedID } = req.body;
+          const filter1 = { _id: new ObjectId("6790cabf6c4e32691d08342d") };
+          await revenueCollection.updateOne(filter1, {
+            $inc: { totalRevenue: 5 },
+          });
+
+          const filter2 = { _id: new ObjectId("678f6d2a768b15763583aea7") };
+          const updateDoc = {
+            $push: {
+              contactReq: { userEmail, requestedID },
+            },
+          };
+          const result2 = await notificationCollection.updateOne(
+            filter2,
+            updateDoc
+          );
+          res.send(result2);
+        } catch {
+          res.send({ status: "Error" });
+        }
+      }
+    );
+    // Add payment to database end
   } finally {
   }
 }
