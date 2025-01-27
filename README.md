@@ -27,7 +27,7 @@ Make sure you have the following installed on your local machine:
    ```bash
    git clone git@github.com:sakib-333/ph-b10-a12-server.git
 
-   cd <ph-b10-a12-server>
+   cd ph-b10-a12-server
    ```
 
 2. Install dependencies
